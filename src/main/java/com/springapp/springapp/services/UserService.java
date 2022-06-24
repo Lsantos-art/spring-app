@@ -24,4 +24,16 @@ public class UserService {
         return repository.findAll(pageable);
     }
 
+    public UserModel findById(Long id) {
+        return repository.findById(id).orElse(null);
+    }
+
+    public void delete(Long id) {
+        repository.deleteById(id);
+    }
+
+    public UserModel findByEmail(String email) {
+        return repository.findByEmail(email);
+    }
+
 }
