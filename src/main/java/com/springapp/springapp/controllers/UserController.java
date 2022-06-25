@@ -2,6 +2,7 @@ package com.springapp.springapp.controllers;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Optional;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
@@ -31,7 +32,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @Api(value = "CRUD de usuarios")
-@CrossOrigin(origins = "*")
 @RequestMapping("api/user")
 public class UserController {
 
@@ -94,13 +94,13 @@ public class UserController {
     @PostMapping("/login")
     @ApiOperation(value = UserConstants.API_USER_LOGIN)
     public ResponseEntity<Object> login(@RequestBody UserDTO user) {
-        var userModel = userService.findByEmail(user.getEmail());
+        Optional<UserModel> userModel = userService.findByEmail(user.getEmail());
 
-        if (userModel == null) {
+        if (!userModel.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(UserConstants.USER_NOT_FOUND);
         }
 
-        boolean checkPassword = userService.checkPassword(user.getPassword(), userModel.getPassword());
+        boolean checkPassword = userService.checkPassword(user.getPassword(), userModel.get().getPassword());
 
         if (!checkPassword) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserConstants.USER_PASSWORD_FAILED);

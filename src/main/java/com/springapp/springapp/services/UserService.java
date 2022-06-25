@@ -4,7 +4,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
+
 
 import com.springapp.springapp.models.UserModel;
 import com.springapp.springapp.repositories.UserRepository;
@@ -37,7 +41,7 @@ public class UserService {
         repository.delete(user);
     }
 
-    public UserModel findByEmail(String email) {
+    public Optional<UserModel> findByEmail(String email) {
         return repository.findByEmail(email);
     }
 
