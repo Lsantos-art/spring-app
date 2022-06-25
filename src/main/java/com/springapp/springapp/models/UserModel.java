@@ -35,6 +35,9 @@ public class UserModel {
     @Column(name = "FGROLE", nullable = false, length = 5)
     private Integer role;
 
+    @Column(name = "DSPASSWORD", nullable = false, length = 255)
+    private String password;
+
     @Column(name = "CREATED_AT", nullable = false)
     private LocalDateTime createdat;
 
