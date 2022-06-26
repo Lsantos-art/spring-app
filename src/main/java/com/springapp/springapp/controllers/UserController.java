@@ -2,6 +2,7 @@ package com.springapp.springapp.controllers;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Date;
 import java.util.Optional;
 
 import org.springframework.beans.BeanUtils;
@@ -11,13 +12,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.springapp.springapp.configuration.constants.UserConstants;
 import com.springapp.springapp.dtos.UserDTO;
 import com.springapp.springapp.models.UserModel;
@@ -25,6 +27,7 @@ import com.springapp.springapp.services.UserService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -42,14 +45,14 @@ public class UserController {
     }
 
     @GetMapping
-    @ApiOperation(value = UserConstants.API_USER_LIST)
+    @ApiOperation(value = UserConstants.API_USER_LIST, authorizations = { @Authorization(value = UserConstants.API_AUTH_PREFIX) })
     public ResponseEntity<Page<UserModel>> getUsers(
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(userService.findAll(pageable));
     }
 
     @PostMapping
-    @ApiOperation(value = UserConstants.API_USER_CREATION)
+    @ApiOperation(value = UserConstants.API_USER_CREATION, authorizations = { @Authorization(value = UserConstants.API_AUTH_PREFIX) })
     public ResponseEntity<UserModel> storeUser(@RequestBody UserDTO user) {
         var userModel = new UserModel();
 
@@ -59,13 +62,13 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @ApiOperation(value = UserConstants.API_USER_GET)
+    @ApiOperation(value = UserConstants.API_USER_GET, authorizations = {@Authorization(UserConstants.API_AUTH_PREFIX)})
     public ResponseEntity<UserModel> getUser(@PathVariable("id") Integer id) {
         return ResponseEntity.status(HttpStatus.OK).body(userService.findById(id));
     }
 
     @PutMapping("/{id}")
-    @ApiOperation(value = UserConstants.API_USER_UPDATE)
+    @ApiOperation(value = UserConstants.API_USER_UPDATE, authorizations = {@Authorization(value = UserConstants.API_AUTH_PREFIX)})
     public ResponseEntity<Object> updateUser(@PathVariable("id") Integer id, @RequestBody UserDTO user) {
         var userModel = userService.findById(id);
 
@@ -79,7 +82,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @ApiOperation(value = UserConstants.API_USER_DELETION)
+    @ApiOperation(value = UserConstants.API_USER_DELETION, authorizations = { @Authorization(value = UserConstants.API_AUTH_PREFIX) })
     public ResponseEntity<Object> deleteUser(@PathVariable("id") Integer id) {
         var userModel = userService.findById(id);
 
@@ -93,20 +96,24 @@ public class UserController {
 
     @PostMapping("/login")
     @ApiOperation(value = UserConstants.API_USER_LOGIN)
-    public ResponseEntity<Object> login(@RequestBody UserDTO user) {
+    public String login(@RequestBody UserDTO user) {
         Optional<UserModel> userModel = userService.findByEmail(user.getEmail());
 
         if (!userModel.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(UserConstants.USER_NOT_FOUND);
+            return UserConstants.USER_NOT_FOUND;
         }
 
         boolean checkPassword = userService.checkPassword(user.getPassword(), userModel.get().getPassword());
 
         if (!checkPassword) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserConstants.USER_PASSWORD_FAILED);
+            return UserConstants.USER_PASSWORD_FAILED;
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(userModel);
+        String token = JWT.create().withSubject(userModel.get().getName())
+                .withExpiresAt(new Date(System.currentTimeMillis() + 600_000))
+                .sign(Algorithm.HMAC512(UserConstants.API_AUTH_GUID_PASSWORD));
+
+        return UserConstants.API_AUTH_PREFIX + token;
     }
 
 }

@@ -24,6 +24,7 @@ public final class UserConstants {
     public static final String API_AUTH_FAILED = "Falha ao autenticar";
 
     public static final String API_AUTH_GUID_PASSWORD = "4470f05b-3956-4f48-9c85-569df8c7d402";
+    public static final String API_AUTH_PREFIX = "Bearer ";
 
     public static final String USER_ROLE_ADMIN = "0";
     public static final String USER_ROLE_USER = "1";
